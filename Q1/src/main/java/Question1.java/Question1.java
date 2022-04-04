@@ -41,7 +41,7 @@ public class Question1 {
 
     public static class ReducerQ1 extends Reducer<Text, NullWritable, IntWritable, NullWritable>{
 
-        private Set<String> distinctNodes ; // duplicates are removed automatically 
+        private Set<String> distinctNodes ; 
 
         @Override
         protected void setup(Context context) {
@@ -50,13 +50,13 @@ public class Question1 {
     
         @Override
         protected void reduce(Text key, Iterable<NullWritable> values, Context context) {
-            distinctNodes.add(key.toString()); // add every key to the list
+            distinctNodes.add(key.toString());
         }
     
         @Override
         protected void cleanup(Context context) throws IOException, InterruptedException {
             IntWritable noOfNodes = new IntWritable(distinctNodes.size());
-            context.write(noOfNodes, NullWritable.get()); // this is the output from the reducer 
+            context.write(noOfNodes, NullWritable.get()); 
         }
 
     }
