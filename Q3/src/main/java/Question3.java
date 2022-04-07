@@ -21,8 +21,8 @@ import java.util.Collections;
 
 
 
-public class Question1 {
-	public static class MapperQ1 extends Mapper<Object, Text, Text, NullWritable> {
+public class Question3 {
+	public static class MapperQ3 extends Mapper<Object, Text, Text, NullWritable> {
 
         @Override
         protected void map(Object key, Text value, Context context) throws IOException, InterruptedException {
@@ -39,7 +39,7 @@ public class Question1 {
 
 
 
-    public static class ReducerQ1 extends Reducer<Text, NullWritable, IntWritable, NullWritable>{
+    public static class ReducerQ3 extends Reducer<Text, NullWritable, IntWritable, NullWritable>{
 
         private Set<String> distinctNodes ; 
 
@@ -65,10 +65,10 @@ public class Question1 {
 
 	public static void main(String[] args) throws Exception {
 		Configuration conf = new Configuration(); 
-		Job job = Job.getInstance(conf, "Question1"); 
-		job.setJarByClass(Question1.class); 
-		job.setMapperClass(Question1.MapperQ1.class); 
-		job.setReducerClass(Question1.ReducerQ1.class); 
+		Job job = Job.getInstance(conf, "Question3"); 
+		job.setJarByClass(Question3.class); 
+		job.setMapperClass(Question3.MapperQ3.class); 
+		job.setReducerClass(Question3.ReducerQ3.class); 
 		job.setNumReduceTasks(1); 
 		job.setMapOutputKeyClass(Text.class); 
 		job.setMapOutputValueClass(NullWritable.class);
