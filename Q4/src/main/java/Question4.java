@@ -22,8 +22,8 @@ import java.text.SimpleDateFormat;
 
 
 
-public class Question3 {
-	public static class MapperQ3 extends Mapper<Object, Text, Text, IntWritable> {
+public class Question4 {
+	public static class MapperQ4 extends Mapper<Object, Text, Text, IntWritable> {
 
         @Override
         protected void map(Object key, Text value, Context context) throws IOException, InterruptedException {
@@ -73,7 +73,7 @@ public class Question3 {
     }
 
 
-    public static class ReducerQ3 extends Reducer<Text, IntWritable, Text, DoubleWritable>{
+    public static class ReducerQ4 extends Reducer<Text, IntWritable, Text, DoubleWritable>{
         private List<Map.Entry<Text, Double>> highestAverage = new ArrayList<Map.Entry<Text, Double>>();
 
         @Override
@@ -87,7 +87,7 @@ public class Question3 {
             double average = (double)sum/length;
 
             highestAverage.add(new AbstractMap.SimpleEntry<Text, Double>(new Text(key), average));
-            Collections.sort(highestAverage, new  NodeComparator());
+            Collections.sort(highestAverage,Collections.reverseOrder(new  NodeComparator()));
 
             if(highestAverage.size() > 10){
                 highestAverage.remove(highestAverage.size() - 1);
@@ -110,10 +110,10 @@ public class Question3 {
 
 	public static void main(String[] args) throws Exception {
 		Configuration conf = new Configuration(); 
-		Job job = Job.getInstance(conf, "Question3"); 
-		job.setJarByClass(Question3.class); 
-		job.setMapperClass(Question3.MapperQ3.class); 
-		job.setReducerClass(Question3.ReducerQ3.class); 
+		Job job = Job.getInstance(conf, "Question4"); 
+		job.setJarByClass(Question4.class); 
+		job.setMapperClass(Question4.MapperQ4.class); 
+		job.setReducerClass(Question4.ReducerQ4.class); 
 		job.setNumReduceTasks(1); 
 		job.setMapOutputKeyClass(Text.class); 
 		job.setMapOutputValueClass(IntWritable.class);
