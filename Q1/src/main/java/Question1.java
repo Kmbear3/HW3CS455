@@ -44,7 +44,7 @@ public class Question1 {
     
                 int compareValue = node1.getValue().compareTo(node2.getValue());
                 if(compareValue > 0){ // was == 1
-                    return 1;
+                    return -1;
                 }
                 else if(compareValue == 0){  
                     int compareKey =  node1.getKey().toString().compareTo(node2.getKey().toString()); 
@@ -59,7 +59,7 @@ public class Question1 {
                     }
                 }
                 else if(compareValue < 0){ // was == -1
-                    return -1;
+                    return 1;
                 }
                 else{
                     return 0; 
@@ -83,6 +83,7 @@ public class Question1 {
             double average = (double)sum/length;
 
             averages.add(new AbstractMap.SimpleEntry<Text, Double>(new Text(key), average));
+            Collections.sort(averages, new  NodeComparator());
         }
     
        @Override
