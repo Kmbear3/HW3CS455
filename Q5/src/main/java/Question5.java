@@ -23,80 +23,41 @@ import java.text.SimpleDateFormat;
 
 
 public class Question5 {
-	public static class MapperQ5 extends Mapper<Object, Text, Text, IntWritable> {
+	public static class CountyWeekMapperQ5 extends Mapper<Object, Text, Text, IntWritable> {
 
         @Override
         protected void map(Object key, Text value, Context context) throws IOException, InterruptedException {
             String[] line = value.toString().split(",");
+            Long time = Long.parseLong(line[2]);
+            Integer aqi = Integer.parseInt(line[1]);
+            String county = line[0];
 
             SimpleDateFormat sdf = new SimpleDateFormat("w");
-            String week = sdf.format(Long.parseLong(line[2]));
+            String weekNum = sdf.format(time);
 
-            context.write(new Text(line[0] + week), new IntWritable(1));
+            sdf = new SimpleDateFormat("yyyy");
+            String year = sdf.format(time);
+
+            Text outKey = new Text(county + "-" + weekNum + "-" + year);
+            IntWritable outVal = new IntWritable(aqi);
+            context.write(outKey, outVal);
         }
 	
     }
-    public static class NodeComparator implements Comparator<Map.Entry<Text, Double>>{
 
+    public static class CountyWeekAverageReducerQ5 extends Reducer<Text, IntWritable, Text, DoubleWritable>{
         @Override
-        public int compare(Map.Entry<Text, Double> node1, Map.Entry<Text, Double> node2){
-    
-                int compareValue = node1.getValue().compareTo(node2.getValue());
-                if(compareValue > 0){ // was == 1
-                    return 1;
-                }
-                else if(compareValue == 0){  
-                    int compareKey =  node1.getKey().toString().compareTo(node2.getKey().toString()); 
-                    if(compareKey > 0){ //was == 1
-                        return -1;
-                    }
-                    else if(compareKey < 0){ // was == -1
-                        return 1;
-                    }
-                    else{
-                        return 0;
-                    }
-                }
-                else if(compareValue < 0){ // was == -1
-                    return -1;
-                }
-                else{
-                    return 0; 
-                }
-        }
-    
-    }
-
-
-    public static class ReducerQ5 extends Reducer<Text, IntWritable, Text, DoubleWritable>{
-        private List<Map.Entry<Text, Double>> highestAverage = new ArrayList<Map.Entry<Text, Double>>();
-
-        @Override
-        protected void reduce(Text key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException {
-            long sum = 0;
-            int length = 0;
+        protected void reduce(Text key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException{
+            Integer sum = 0;
+            Integer count = 0;
             for(IntWritable x : values){
-                sum += x.get();
-                length++;
-            }
-            double average = (double)sum/length;
-
-            highestAverage.add(new AbstractMap.SimpleEntry<Text, Double>(new Text(key), average));
-            Collections.sort(highestAverage, new  NodeComparator());
-
-            if(highestAverage.size() > 10){
-                highestAverage.remove(highestAverage.size() - 1);
-            }
-        }
-    
-       @Override
-        protected void cleanup(Context context) throws IOException, InterruptedException {
-            for(Map.Entry<Text, Double> entry : highestAverage){
-                Text county = new Text(entry.getKey());
-                DoubleWritable average = new DoubleWritable(entry.getValue());
-                context.write(county, average);
+                Integer aqi = x.get();
+                sum += aqi;
+                ++count;
             }
 
+            Double avg = (double) sum / count;
+            context.write(new Text(key), new DoubleWritable(avg));
         }
 
     }
@@ -104,19 +65,37 @@ public class Question5 {
     
 
 	public static void main(String[] args) throws Exception {
+        Path inputFile = new Path(args[1]);
+        Path countyWeekAvgPath = new Path(args[2]);
+        Path finalOutput = new Path(args[3]);
+
 		Configuration conf = new Configuration(); 
-		Job job = Job.getInstance(conf, "Question5"); 
+		Job job = Job.getInstance(conf, "Question5-Job1"); 
 		job.setJarByClass(Question5.class); 
-		job.setMapperClass(Question5.MapperQ5.class); 
-		job.setReducerClass(Question5.ReducerQ5.class); 
+		job.setMapperClass(Question5.CountyWeekMapperQ5.class); 
+		job.setReducerClass(Question5.CountyWeekAverageReducerQ5.class); 
 		job.setNumReduceTasks(1); 
 		job.setMapOutputKeyClass(Text.class); 
 		job.setMapOutputValueClass(IntWritable.class);
 		job.setOutputKeyClass(Text.class);  
 		job.setOutputValueClass(DoubleWritable.class);
-		FileInputFormat.addInputPath(job, new Path(args[1]));
-		FileOutputFormat.setOutputPath(job, new Path(args[2]));
-		System.exit(job.waitForCompletion(true) ? 0 : 1);
+		FileInputFormat.addInputPath(job, inputFile);
+		FileOutputFormat.setOutputPath(job, countyWeekAvgPath);
+		job.waitForCompletion(true);
+
+        Configuration confJob2 = new Configuration(); 
+		Job job2 = Job.getInstance(confJob2, "Question5-Job2"); 
+		job2.setJarByClass(Question5Job2.class); 
+		job2.setMapperClass(Question5Job2.CountyAvgYearMapperQ5.class); 
+		job2.setReducerClass(Question5Job2.CountyLargestChangeReducerQ5.class); 
+		job2.setNumReduceTasks(1); 
+		job2.setMapOutputKeyClass(Text.class); 
+		job2.setMapOutputValueClass(Text.class);
+		job2.setOutputKeyClass(Text.class);  
+		job2.setOutputValueClass(DoubleWritable.class);
+		FileInputFormat.addInputPath(job2, countyWeekAvgPath);
+		FileOutputFormat.setOutputPath(job2, finalOutput);
+		System.exit(job2.waitForCompletion(true) ? 0 : 1);
 
 	}
 
