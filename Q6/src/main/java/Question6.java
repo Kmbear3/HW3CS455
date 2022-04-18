@@ -50,18 +50,48 @@ public class Question6 {
         protected void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException{
             Integer sum = 0;
             Integer count = 0;
+            Integer sum2020 = 0;
+            Integer count2020 = 0;
+
+            ArrayList<String[]> vals = new ArrayList<>();
             for(Text x : values){
                 String[] aqiYear = x.toString().split("-");
+                vals.add(aqiYear);
+
                 Integer aqi = Integer.parseInt(aqiYear[0]);
                 String year = aqiYear[1];
-                if(year.equals("2020")){
+                if(year.equals("2021")){
+                    continue;
+                }
+                else if(!year.equals("2020")){
                     sum += aqi;
                     ++count;
+                }else{ //2020 data
+                    sum2020 += aqi;
+                    ++count2020;
+                }
+            }
+            Double avgAQI = (double) sum / count;
+            Double avgAQI2020 = (double) sum2020 / count2020;
+
+            Double diffSum = 0.0;
+            Integer count2 = 0;
+            for(String[] aqiYear: vals){
+                Integer aqi = Integer.parseInt(aqiYear[0]);
+                String year = aqiYear[1];
+
+                Double diff2 = Math.pow((aqi - avgAQI),2);
+                if(!year.equals("2020")){
+                    diffSum += diff2;
+                    ++count2;
                 }
             }
 
-            Double avg = (double) sum / count;
-            context.write(new Text(key), new Text("" + avg));
+            Double std_dev = Math.sqrt(diffSum / count);
+
+            if(Math.abs(avgAQI2020 - avgAQI) > std_dev){
+                 context.write(new Text(key.toString() + "-2020"), new Text("2020avg=" + avgAQI2020 + "||pastAvg=" + avgAQI + "||std_dev=" + std_dev));
+            }  
         }
 
     }
@@ -77,7 +107,7 @@ public class Question6 {
 		job.setJarByClass(Question6.class); 
 		job.setMapperClass(Question6.CountyWeekMapperQ6.class); 
 		job.setReducerClass(Question6.CountyWeekAverageReducerQ6.class); 
-		job.setNumReduceTasks(1); 
+		job.setNumReduceTasks(3); 
 		job.setMapOutputKeyClass(Text.class); 
 		job.setMapOutputValueClass(Text.class);
 		job.setOutputKeyClass(Text.class);  
