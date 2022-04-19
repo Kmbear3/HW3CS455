@@ -65,7 +65,7 @@ public class Question5Job2 {
 
                 if(weekToAQI.containsKey(nextKey)){
                     Double nextAvg = weekToAQI.get(nextKey);
-                    Double weekChange = curAvg - nextAvg;
+                    Double weekChange = nextAvg - curAvg;
                     changes.add(weekChange);
                 }
             }
